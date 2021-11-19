@@ -87,17 +87,12 @@ data TestOutput
 
 -- The monoid laws should hold observationally w.r.t. the semantics defined
 -- in this module
-#if MIN_VERSION_base(4,11,0)
 instance Semigroup TestOutput where
   (<>) = Seq
 instance Monoid TestOutput where
   mempty = Skip
-#else
-instance Monoid TestOutput where
-  mempty = Skip
-  mappend = Seq
-instance Semigroup TestOutput where
-  (<>) = mappend
+#if !MIN_VERSION_base(4,11,0)
+  mappend = (<>)
 #endif
 
 applyHook :: ([TestName] -> Result -> IO Result) -> TestOutput -> TestOutput
@@ -301,17 +296,12 @@ data Statistics = Statistics
   , statFailures :: !Int -- ^ Number of active tests that failed.
   }
 
-#if MIN_VERSION_base(4,11,0)
 instance Semigroup Statistics where
   Statistics t1 f1 <> Statistics t2 f2 = Statistics (t1 + t2) (f1 + f2)
 instance Monoid Statistics where
   mempty = Statistics 0 0
-#else
-instance Monoid Statistics where
-  Statistics t1 f1 `mappend` Statistics t2 f2 = Statistics (t1 + t2) (f1 + f2)
-  mempty = Statistics 0 0
-instance Semigroup Statistics where
-  (<>) = mappend
+#if !MIN_VERSION_base(4,11,0)
+  mappend = (<>)
 #endif
 
 -- | @computeStatistics@ computes a summary 'Statistics' for
@@ -652,22 +642,14 @@ data Maximum a
   = Maximum a
   | MinusInfinity
 
-#if MIN_VERSION_base(4,11,0)
 instance Ord a => Semigroup (Maximum a) where
   Maximum a <> Maximum b = Maximum (a `max` b)
   MinusInfinity <> a = a
   a <> MinusInfinity = a
 instance Ord a => Monoid (Maximum a) where
   mempty = MinusInfinity
-#else
-instance Ord a => Monoid (Maximum a) where
-  mempty = MinusInfinity
-
-  Maximum a `mappend` Maximum b = Maximum (a `max` b)
-  MinusInfinity `mappend` a = a
-  a `mappend` MinusInfinity = a
-instance Ord a => Semigroup (Maximum a) where
-  (<>) = mappend
+#if !MIN_VERSION_base(4,11,0)
+  mappend = (<>)
 #endif
 
 -- | Compute the amount of space needed to align \"OK\"s and \"FAIL\"s
