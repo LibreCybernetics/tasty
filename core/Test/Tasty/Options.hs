@@ -98,12 +98,20 @@ data OptionValue = forall v . IsOption v => OptionValue v
 newtype OptionSet = OptionSet (Map TypeRep OptionValue)
 
 -- | Later options override earlier ones
+#if MIN_VERSION_base(4,11,0)
+instance Semigroup OptionSet where
+  OptionSet a <> OptionSet b =
+    OptionSet $ Map.unionWith (flip const) a b
+instance Monoid OptionSet where
+  mempty = OptionSet mempty
+#else
 instance Monoid OptionSet where
   mempty = OptionSet mempty
   OptionSet a `mappend` OptionSet b =
     OptionSet $ Map.unionWith (flip const) a b
 instance Semigroup OptionSet where
   (<>) = mappend
+#endif
 
 -- | Set the option value
 setOption :: IsOption v => v -> OptionSet -> OptionSet
